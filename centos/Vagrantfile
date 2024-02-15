@@ -1,0 +1,24 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+    config.vm.box = "centos/7"
+    config.vm.box_version = "2004.01"
+    config.vm.provider "virtualbox" do |v|
+        v.memory = 1024
+        v.cpus = 1
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    end
+
+    config.vm.define "master" do |gfs|
+        gfs.vm.network "public_network", bridge: "eno2", ip: "192.168.0.100"
+        gfs.vm.hostname = "master"
+        gfs.vm.provider "virtualbox" do |vb|
+            unless File.exist?('./disk2.vdi')
+              vb.customize ['createhd', '--filename', './disk2.vdi', '--variant', 'Fixed', '--size', 40 * 1024]
+            end
+            vb.customize ["storagectl", :id, "--name", "SATA", "--add", "sata" ]
+            vb.customize ['storageattach', :id,  '--storagectl', 'SATA', '--port', 1, '--device', 0, '--type', 'hdd', '--medium', './disk2.vdi']
+          end
+    end
+end
