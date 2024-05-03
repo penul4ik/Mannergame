@@ -1,0 +1,271 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: install packages
+    yum:
+      name: "{{ packages }}"
+      state: present
+    vars:
+      packages:
+      - vim
+      - wget
+      - ntp
+      - ntpdate
+
+- hosts: master
+  become: true
+  tasks:
+  - name: create groups
+    group:
+      name: "{{ item }}"
+      state: present
+    loop: "{{ group_names }}"
+    vars:
+      group_names:
+      - prometheus
+      - nodeusr
+  - name: create users
+    user:
+      name: "{{ item }}"
+      group: "{{ item }}"
+      createhome: no
+      shell: /bin/false
+      state: present
+    loop: "{{ user_names }}"
+    vars:
+      user_names:
+      - prometheus
+      - nodeusr
+  - name: create a directory
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: 0770
+      owner: prometheus
+      group: prometheus
+    loop: "{{ path_directory }}"
+    vars:
+      path_directory:
+        - /var/lib/prometheus
+        - /etc/prometheus
+  - name: copy main config
+    copy:
+      src: files/prometheus.yml
+      dest: /etc/prometheus/prometheus.yml
+      owner: prometheus
+      group: prometheus
+      mode: 0640
+  - name: download packages
+    get_url:
+      url: "{{ item }}"
+      dest: ~/
+    loop: "{{ urls }}"
+    vars:
+      urls:
+      - https://github.com/prometheus/prometheus/releases/download/v2.51.2/prometheus-2.51.2.linux-amd64.tar.gz
+      - https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+  - name: unarchive
+    unarchive:
+      src: "{{ ansible_env.HOME }}/{{ item }}"
+      dest: "{{ ansible_env.HOME }}"
+      remote_src: true
+    loop: "{{ archives }}"
+    vars:
+      archives:
+      - prometheus-2.51.2.linux-amd64.tar.gz
+      - node_exporter-1.7.0.linux-amd64.tar.gz
+  - name: copy bin files
+    copy:
+      src: ~/prometheus-2.51.2.linux-amd64/{{ item }}
+      dest: /usr/local/bin/
+      mode: 0770
+      owner: prometheus
+      group: prometheus
+      remote_src: true
+    loop: "{{ prometheus }}"
+    vars:
+      prometheus:
+      - prometheus
+      - promtool
+  - name: copy libraries
+    copy:
+      src: ~/prometheus-2.51.2.linux-amd64/{{ item }}
+      dest: /etc/prometheus/
+      owner: prometheus
+      group: prometheus
+      remote_src: true
+    loop: "{{ libraries }}"
+    vars:
+      libraries:
+      - consoles
+      - console_libraries
+  - name: copy node_exporter bin files
+    copy:
+      src: ~/node_exporter-1.7.0.linux-amd64/node_exporter
+      dest: /usr/local/bin/node_exporter
+      mode: 0770
+      owner: nodeusr
+      group: nodeusr
+      remote_src: true
+  - name: permissions for prometheus
+    file:
+      path: /etc/prometheus
+      state: directory
+      owner: prometheus
+      group: prometheus
+      recurse: true
+  - name: permissions for prometheus libraries
+    file:
+      path: /var/lib/prometheus
+      state: directory
+      owner: prometheus
+      group: prometheus
+      recurse: true
+  - name: copy unit file
+    copy:
+      src: files/{{ item }}
+      dest: /etc/systemd/system/
+    loop: "{{ unit }}"
+    vars:
+      unit:
+      - prometheus.service
+      - node_exporter.service
+  - name: starting services
+    ansible.builtin.systemd:
+      name: "{{ item }}"
+      daemon_reload: true
+      enabled: true
+      state: started
+    loop: "{{ service }}"
+    vars:
+      service:
+      - prometheus.service
+      - node_exporter.service
+  - name: copy grafana server
+    copy:
+      src: ~/Documents/grafana-enterprise-10.4.2-1.x86_64.rpm
+      dest: /usr/local/src/
+  - name: install grafana
+    yum:
+      name: /usr/local/src/grafana-enterprise-10.4.2-1.x86_64.rpm
+      state: present
+  - name: copy prometheus source for grafana
+    copy:
+      src: files/source_prometheus.yml
+      dest: /etc/grafana/provisioning/datasources/prometheus.yml
+      owner: grafana
+      group: grafana
+  - name: mkdir for grafana dashboards
+    file:
+      path: /var/lib/grafana/dashboards
+      state: directory
+      mode: 0770
+      owner: grafana
+      group: grafana
+  - name: copy dashboard yaml
+    copy:
+      src: files/my_dashboard.yml
+      dest: /etc/grafana/provisioning/dashboards/
+      owner: grafana
+      group: grafana
+  - name: copy dashboard json
+    copy:
+      src: files/1860_rev36.json
+      dest: /var/lib/grafana/dashboards/node_exporter_full.json
+      owner: grafana
+      group: grafana
+  - name: start grafana
+    systemd:
+      name: grafana-server
+      daemon_reload: true
+      enabled: true
+      state: started
+
+- hosts: client1
+  become: true
+  tasks:
+  - name: create groups
+    group:
+      name: nodeusr
+      state: present
+  - name: create users
+    user:
+      name: nodeusr
+      group: nodeusr
+      createhome: no
+      shell: /bin/false
+      state: present
+  - name: download packages
+    get_url:
+      url: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+      dest: /root/
+  - name: unarchive
+    unarchive:
+      src: /root/node_exporter-1.7.0.linux-amd64.tar.gz
+      dest: "{{ ansible_env.HOME }}"
+      remote_src: true
+  - name: copy node_exporter bin files
+    copy:
+      src: ~/node_exporter-1.7.0.linux-amd64/node_exporter
+      dest: /usr/local/bin/node_exporter
+      mode: 0770
+      owner: nodeusr
+      group: nodeusr
+      remote_src: true
+  - name: copy unit file
+    copy:
+      src: files/node_exporter.service
+      dest: /etc/systemd/system/
+  - name: start node_exporter
+    ansible.builtin.systemd:
+      name: node_exporter
+      daemon_reload: true
+      enabled: true
+      state: started
+  
+- hosts: client2
+  become: true
+  tasks:
+  - name: create groups
+    group:
+      name: nodeusr
+      state: present
+  - name: create users
+    user:
+      name: nodeusr
+      group: nodeusr
+      createhome: no
+      shell: /bin/false
+      state: present
+  - name: download packages
+    get_url:
+      url: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+      dest: /root/
+  - name: unarchive
+    unarchive:
+      src: /root/node_exporter-1.7.0.linux-amd64.tar.gz
+      dest: "{{ ansible_env.HOME }}"
+      remote_src: true
+  - name: copy node_exporter bin files
+    copy:
+      src: ~/node_exporter-1.7.0.linux-amd64/node_exporter
+      dest: /usr/local/bin/node_exporter
+      mode: 0770
+      owner: nodeusr
+      group: nodeusr
+      remote_src: true
+  - name: copy unit file
+    copy:
+      src: files/node_exporter.service
+      dest: /etc/systemd/system/
+  - name: start node_exporter
+    ansible.builtin.systemd:
+      name: node_exporter
+      daemon_reload: true
+      enabled: true
+      state: started
+
+    
+  
+    
