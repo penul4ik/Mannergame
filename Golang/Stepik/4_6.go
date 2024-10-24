@@ -7,13 +7,13 @@ import (
 func main() {
 	var n int
 	fmt.Scan(&n)
-	last := n
+	l := n
 	var cnt int
 	for n != 0 {
-		if last < n {
+		if (l < 0 && n > 0) || (l > 0 && n < 0) {
 			cnt++
 		}
-		last = n
+		l = n
 		fmt.Scan(&n)
 	}
 	fmt.Println(cnt)
