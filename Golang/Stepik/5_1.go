@@ -3,18 +3,15 @@ package main
 import "fmt"
 
 func main() {
-	var l int
-	fmt.Scan(&l)
-	var array = make([]int, l)
-	for i := 0; i < len(array); i++ {
-		fmt.Scan(&array[i])
-		if i%2 != 0 {
-			tmp := array[i-1]
-			array[i-1] = array[i]
-			array[i] = tmp
-		}
+	planets := [...]string{ // Компилятор Go подсчитывает элементы
+		"Меркурий",
+		"Венера",
+		"Земля",
+		"Марс",
+		"Юпитер",
+		"Сатурн",
+		"Уран",
+		"Нептун", // Запятая в самом конце является обязательной
 	}
-	for i := 0; i < len(array); i++ {
-		fmt.Print(array[i], " ")
-	}
+	fmt.Println(len(planets))
 }
