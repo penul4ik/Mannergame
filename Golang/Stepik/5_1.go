@@ -3,15 +3,17 @@ package main
 import "fmt"
 
 func main() {
-	planets := [...]string{ // Компилятор Go подсчитывает элементы
-		"Меркурий",
-		"Венера",
-		"Земля",
-		"Марс",
-		"Юпитер",
-		"Сатурн",
-		"Уран",
-		"Нептун", // Запятая в самом конце является обязательной
+	var n int
+	fmt.Scan(&n)
+	slice := make([]int, n)
+	for i := 0; i < n; i++ {
+		fmt.Scan(&slice[i])
 	}
-	fmt.Println(len(planets))
+	for i := 0; i < n; i++ {
+		for j := 0; j < n; j++ {
+			if j != i && slice[i]+slice[j] == 0 {
+				fmt.Print(i, " ")
+			}
+		}
+	}
 }
