@@ -1,12 +1,23 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 )
 
 func main() {
-	var s string
-	fmt.Scan(&s)
+	scan := bufio.NewScanner(os.Stdin)
+	_ = scan.Scan()
+	first := scan.Text()
+	_ = scan.Scan()
+	second := scan.Text()
 
-	fmt.Println(s)
+	if len(first) == 0 || len(second) == 0 {
+		fmt.Println("NO")
+	} else {
+
+		fmt.Println(first[len(first)-1], second[0])
+	}
+
 }
