@@ -1,17 +1,25 @@
 package main
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func main() {
-
-var star byte = '*'
-fmt.Printf("%c %[1]v\n", star) // Выводит: * 42
- 
-smile := ''
-fmt.Printf("%c %[1]v\n", smile) // Выводит: ? 128515
- 
-acute := 'é'
-fmt.Printf("%c %[1]v\n", acute) // Выводит: é 233
+	message := "L fdph, L vdz, L frqtxhuhg"
+	for i, _ := range message {
+		if message[i] >= 'A' && message[i] <= 'z' {
+			fmt.Printf("%c", message[i]-3)
+		} else {
+			fmt.Printf("%c", message[i])
+		}
+	}
+	fmt.Print("\n")
+	spanishMessage := "Hola Estación Espacial Internacional"
+	for _, c := range spanishMessage { // Используем rune, а не байты
+		if c >= 'a' && c <= 'z' {
+			c = c + 13
+			if c > 'z' {
+				c = c - 26
+			}
+		}
+		fmt.Printf("%c", c) // Теперь корректно обрабатывает Unicode
+	}
 }
