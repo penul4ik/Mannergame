@@ -1,3 +1,3 @@
-module github.com/penul4ik/Mannergame/tree/master/Golang/Stepik
+module easyhttp
 
-go 1.23.0
+go 1.23.2

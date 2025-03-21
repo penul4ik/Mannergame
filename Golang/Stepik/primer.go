@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 )
 
 type GithubUser struct {
@@ -39,42 +38,7 @@ type User interface {
 	GetHelloMessage() string
 }
 
-func SayHello(u User) {
-	msg := u.GetHelloMessage()
-	fmt.Println(msg)
-}
-
-func hello(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "hello\n")
-}
-
-func headers(w http.ResponseWriter, req *http.Request) {
-	for name, headers := range req.Header {
-		for _, h := range headers {
-			fmt.Fprintf(w, "%v: %v\n", name, h)
-		}
-	}
-}
-
 func main() {
-	// для запросов из vscode удобно использовать thunderclient
-	// http2 в действии
-
-	// TODO:
-	// 1) определить методы GET и POST
-	// 2) прикрутить HTML шаблон
-	// 3) Сделать GET запрос на бекенд с query параметрами, считать параметры
-	// 4) Сделать sumbit из HTML на бекенд, считать параметры
-	// 5) Сделать POST запрос с json телом и обработать его внутри программы( считать в структуру и вывести в stdout)
-	// 6) Отдавать корректные статус коды на запросы
-	// 7) Пункт со звездочкой - прикрутить middleware, для авторизации (брать header Authorization и получить из него Bearer ***, проверять и выдавать корректный результат)
-
-	http.HandleFunc("/hello", hello)
-	http.HandleFunc("/headers", headers)
-	err := http.ListenAndServe(":8090", nil)
-	if err != nil {
-		panic(err)
-	}
 
 	const (
 		name    = "Maks"
