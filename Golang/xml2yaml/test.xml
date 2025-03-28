@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <metadata>
+        <created>2025-03-26</created>
+        <location country="Russia" city="Moscow"/>
+    </metadata>
+
+    <book id="1">
+        <title lang="en">Go Programming</title>
+        <author>John Doe</author>
+        <year>2024</year>
+        <available>true</available>
+    </book>
+
+    <book id="2">
+        <title lang="ru">Программирование на Go</title>
+        <author>Иван Иванов</author>
+        <year>2023</year>
+        <available>false</available>
+        <notes>
+            <note priority="high">Best-seller</note>
+            <note>Translated from English</note>
+        </notes>
+    </book>
+
+    <book id="3">
+        <title>XML and YAML</title>
+        <author></author> <!-- пустой элемент -->
+        <year/>
+        <available/>
+    </book>
+
+    <emptyTag/>
+</library>
