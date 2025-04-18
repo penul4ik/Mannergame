@@ -1,0 +1,4 @@
+This is a sample input file.
+It has multiple lines.
+We will use it to test our advanced getopt script.
+This demonstrates processing files with Bash scripts.

@@ -6,19 +6,97 @@
 # В соответствии с указанными параметрами применяем фильтр к тексту из открытого файла
 # Отфильтрованный текст и путь к файлу с текстом выводим в stdout
 
+usage() {
+ cat << EOF
+SINOPSIS: 
+  $0 [OPTIONS] [DIR]
 
+  A script for search valentinki in files in the directory.
 
-PATH_VALENTINE=$1
+OPTIONS:
+  -h, --help                 Print this message.
+  --max_age (int VALUE)      Filtering valentinki by max age.
+  --min_age (int VALUE)      Filtering valentinki by min age.
+  --min_income (int VALUE)   Filtering valentinki by min income.
+  --min_height (int VALUE)   Filtering valentinki by min height.
+  [DIR]                      Specifies the directory dor search files with valentinki. If empty that script will search valentinki in current directory.
 
-basic_filter(){
-	ls -1 $PATH_VALENTINE | grep -vE '(Иван|иван)' | grep -E 'Ты\s+мне\s+очень\s+нравишься\s+[А-Яа-яЁё]{2,20}\s+[0-9]{3}*\s+[1-9][0-9]{4,}\s+[0-9]{2}\.txt'
+EXAMPLES: 
+  $0 -h
+  $0 --min_age 18 --min_income 100000 ~/valentinki
+EOF
+exit 1
 }
 
-if [ ! -d $PATH_VALENTINE ]; then
-	echo "$PATH_VALENTINE not a directory"
-	exit 1
-elif [ -z $PATH_VALENTINE ]; then
-	PATH_VALENTINE="$(pwd)"
+OPTS=$(getopt -o h --long help,max_age:,min_age:,min_income:,min_height: -n 'simple_getopt.sh' -- "$@")
+
+if [ $? -ne 0 ]; then
+	echo "failed to parse options with getops" >&2
+	usage
 fi
 
-basic_filter
+eval set -- "$OPTS"
+
+HELP=false
+MAX_AGE=200
+MIN_AGE=0
+MIN_INCOME=0
+MIN_HEIGHT=0
+
+while true; do
+	case "$1" in
+		-h | --help)
+			usage
+			shift
+			;;
+		--max_age)
+			MAX_AGE=$2
+			shift 2
+			;;
+		--min_age)
+                        MIN_AGE=$2
+                        shift 2
+                        ;;
+		--min_income)
+                        MIN_INCOME=$2
+                        shift 2
+                        ;;
+		--min_height)
+			MIN_HEIGHT=$2
+			shift 2
+			;;
+		--)
+			shift
+			break
+			;;
+		*)
+			echo "Failed parse option" >&2
+			usage
+			;;
+	esac
+done
+
+DIRECTORY="$@"
+
+if [ ! -d $DIRECTORY ]; then
+	echo "$DIRECTORY not a directory" >&2
+	usage
+fi
+
+for file in $(ls -1 $DIRECTORY | grep -E '*.txt'); do
+		valentinka=$(cat $file)
+	if [[ "$valentinka" =~ Ты[[:space:]]мне[[:space:]]очень[[:space:]]нравишься[[:space:]]+[А-Яа-яЁё]{2,20}[[:space:]]+[0-9]{3}[[:space:]]+[1-9][0-9]{4,}[[:space:]]+[0-9]{2} && ! "$valentinka" =~ .*Иван.* && ! "$valentinka" =~ .*иван.* ]]; then
+		AGE=$(echo $valentinka|awk '{print$8}')
+		INCOME=$(echo $valentinka|awk '{print$7}')
+		HEIGHT=$(echo $valentinka|awk '{print$6}')
+		if [ "$AGE" -le "$MAX_AGE" ] && [ "$AGE" -ge "$MIN_AGE" ] && [ "$INCOME" -ge "$MIN_INCOME" ] && [ "$HEIGHT" -ge "$MIN_HEIGHT" ]; then
+                	echo "$DIRECTORY$file$AGE"
+			cat $file
+		fi
+	fi
+done
+
+
+echo "max_age $MAX_AGE, min_age $MIN_AGE, min_income $MIN_INCOME, min_height $MIN_HEIGHT, directory $DIRECTORY"
+
+
