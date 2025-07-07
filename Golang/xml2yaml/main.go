@@ -26,6 +26,7 @@ func xmlDecode(pathToFile string) (map[string]any, error) {
 	return mv, nil
 }
 
+// некорректно форматирует комментарии в xml
 func cleanMap(m map[string]any) map[string]any {
 	clean := make(map[string]any)
 	for k, v := range m {
@@ -72,8 +73,8 @@ func main() {
 		fmt.Printf("Error while decode xml: %v", err)
 		os.Exit(1)
 	}
-	dataCleaned := cleanMap(data)
-	yamlData, err := yaml.Marshal(&dataCleaned)
+	dataCleaned := cleanMap(data)               // Эту функция наверное стоит вызывать в конце каждой функции, после декодирования в мапу
+	yamlData, err := yaml.Marshal(&dataCleaned) // Это вынести в функцию yaml
 	if err != nil {
 		fmt.Printf("Error while marshaling: %v", err)
 		os.Exit(1)

@@ -2,17 +2,26 @@ package main
 
 import "fmt"
 
-func increment(n *int) {
-	// *n обращается к значению, на которое указывает n, и увеличивает его на 1
-	*n = *n + 1
+func kelvinToCelsius(k kelvin) celsius {
+	return celsius(k - 273.15)
 }
 
+func celsiusToFahrenheit(k celsius) fahrenheit {
+	return fahrenheit(k*9.0/5.0) + 32.0
+}
+
+func celsiusToKelvin(k celsius) kelvin {
+	return kelvin(k + 273.15)
+}
+
+type celsius float64
+type kelvin float64
+type fahrenheit float64
+
 func main() {
-	a := 10
-	fmt.Println("До:", a) // До: 10
-
-	// Передаём адрес переменной a в функцию
-	increment(&a)
-
-	fmt.Println("После:", a) // После: 11
+	var kelvin kelvin = (127 + 273.15)
+	celsius := kelvinToCelsius(kelvin)
+	fahrenheit := celsiusToFahrenheit(celsius)
+	kelvin = celsiusToKelvin(celsius)
+	fmt.Println(celsius, "° C is ", fahrenheit, "° F", kelvin, "° F")
 }
